@@ -1,15 +1,46 @@
-import React from 'react';
-import ReactDOM from 'react-dom';
-import { Provider } from 'react-redux';
-import { createStore, applyMiddleware } from 'redux';
+// import React from 'react';
+// import ReactDOM from 'react-dom';
 
-import App from './components/app';
-import reducers from './reducers';
+import React, { Component } from 'react';
+const ReactDOM = require('react-dom');
+import _ from 'lodash';
 
-const createStoreWithMiddleware = applyMiddleware()(createStore);
+// const SearchBar = require('./components/search_bar');
+import SearchBar from './components/search_bar';
+import VideoList from './components/video_list';
+import VideoDetail from './components/video_detail';
 
-ReactDOM.render(
-  <Provider store={createStoreWithMiddleware(reducers)}>
-    <App />
-  </Provider>
-  , document.querySelector('.container'));
+const YTSearch = require('youtube-api-search');
+
+const API_KEY = 'AIzaSyDwOCFDDdLieHB_a49QDjNSDwaP0hfTRMc';
+
+// Create a new component. This component should produce some html
+class App extends Component {
+
+	constructor(props) {
+		super(props);
+		this.state = { videos: [],
+		selectedVideo: null
+		 };
+		this.videoSearch('surfboards');
+	}
+	videoSearch(term) {
+		YTSearch({key: API_KEY, term: term}, videos => {
+			this.setState({ videos, selectedVideo: videos[0] });
+		});
+	}
+	render() {
+		const videoSearch = _.debounce((term) => { this.videoSearch(term)}, 300);
+		return (
+			<div>
+			<SearchBar onSearchTermChange = {term => this.videoSearch(term)} />
+			<VideoDetail video = {this.state.selectedVideo}/>
+			<VideoList onVideoSelect = {selectedVideo => this.setState({selectedVideo})}
+			 videos = {this.state.videos} />
+			</div>
+			);
+	}
+	
+};
+// take this component's generated HTML and put it on the page (in the DOM)
+ReactDOM.render(<App />, document.querySelector('.container'));
